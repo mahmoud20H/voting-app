@@ -3,11 +3,10 @@
   <head>
     <meta charset="utf-8">
     <title>Cats vs Dogs -- Result</title>
-    <base href="/index.html">
     <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
     <meta name="keywords" content="docker-compose, docker, stack">
     <meta name="author" content="Docker">
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='stylesheets/style.css' />
   </head>
   <body ng-controller="statsCtrl" >
      <div id="background-stats">
@@ -35,9 +34,20 @@
       <span ng-if="total == 0">No votes yet</span>
       <span ng-if="total == 1">{{total}} vote</span>
       <span ng-if="total >= 2">{{total}} votes</span>
+      <div style="margin-top: 10px;">
+        <a href="javascript:void(0)" onclick="logout()" style="color: #1aaaf8; text-decoration: none; font-size: 14px;">Logout</a>
+      </div>
     </div>
     <script src="socket.io.js"></script>
     <script src="angular.min.js"></script>
     <script src="app.js"></script>
+    <script>
+      async function logout() {
+        try {
+          await fetch('/auth/logout', { method: 'POST' });
+        } catch (e) {}
+        window.location.assign('/login');
+      }
+    </script>
   </body>
 </html>
