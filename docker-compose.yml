@@ -12,8 +12,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    volumes:
-     - ./vote:/usr/local/app
     ports:
       - "8080:80"
     networks:
@@ -27,8 +25,6 @@ services:
     depends_on:
       db:
         condition: service_healthy 
-    volumes:
-      - ./result:/usr/local/app
     ports:
       - "8081:80"
       - "127.0.0.1:9229:9229"
