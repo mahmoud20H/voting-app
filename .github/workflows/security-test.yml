@@ -7,68 +7,60 @@ on:
     branches: [ "main" ]
 
 jobs:
-  Semgrep-SAST:
-    name: Semgrep SAST
+  security-scans:
+    name: ${{ matrix.job-name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - job-name: Semgrep SAST
+            tool: semgrep
+            artifact-name: semgrep-results
+            output-file: semgrep.sarif
+          - job-name: Trivy SCA
+            tool: trivy-sca
+            artifact-name: trivy-sca-results
+            output-file: trivy-sca.sarif
+          - job-name: Trivy Dockerfile Check
+            tool: trivy-dockerfiles
+            artifact-name: trivy-dockerfiles-results
+            output-file: trivy-dockerfiles.sarif
+
     steps:
       - name: Checkout codebase
         uses: actions/checkout@v4
 
       - name: Semgrep SAST scan
+        if: matrix.tool == 'semgrep'
         run: |
             pip install semgrep
             semgrep --config p/default --sarif --output semgrep.sarif . || true
 
-      - name: Upload Semgrep SARIF as artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-            name: semgrep-results-${{ github.ref_name }}-${{ github.sha }}
-            path: semgrep.sarif
-
-  Trivy-SCA:
-    name: Trivy SCA
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout codebase
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner in repo mode (SCA)
+      - name: Run Trivy SCA
+        if: matrix.tool == 'trivy-sca'
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           ignore-unfixed: true
           format: 'sarif'
-          output: 'trivy-sca.sarif'
+          output: ${{ matrix.output-file }}
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          exit-code: '1'
 
-      - name: Upload Trivy SCA artifact
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: trivy-sca-results-${{ github.ref_name }}-${{ github.sha }}
-          path: trivy-sca.sarif
-
-  Trivy-Dockerfiles:
-    name: Trivy Dockerfile Misconfigurations
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout codebase
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner in config mode (Misconfigurations/Dockerfiles)
+      - name: Run Trivy Dockerfile Check
+        if: matrix.tool == 'trivy-dockerfiles'
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
           format: 'sarif'
-          output: 'trivy-dockerfiles.sarif'
+          output: ${{ matrix.output-file }}
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          exit-code: '1'
 
-      - name: Upload Trivy Dockerfiles artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload artifact
         if: success()
+        uses: actions/upload-artifact@v4
         with:
-          name: trivy-dockerfiles-results-${{ github.ref_name }}-${{ github.sha }}
-          path: trivy-dockerfiles.sarif
+          name: ${{ matrix.artifact-name }}-${{ github.ref_name }}-${{ github.sha }}
+          path: ${{ matrix.output-file }}
