@@ -20,9 +20,9 @@ jobs:
             semgrep --config p/default --sarif --output semgrep.sarif . || true
 
       - name: Upload Semgrep SARIF as artifact
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-            name: semgrep-results-${{ github.repository_owner }}-${{ github.event.repository.name }}
+            name: semgrep-results-${{ github.ref_name }}-${{ github.sha }}
             path: semgrep.sarif
 
