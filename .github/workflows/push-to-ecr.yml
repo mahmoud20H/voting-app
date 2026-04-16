@@ -35,7 +35,7 @@ jobs:
     - name: Create ECR repository
       env:
         REPOSITORY: ${{ matrix.service }}
-      run: aws ecr create-repository --repository-name $REPOSITORY
+      run: aws ecr describe-repositories --repository-names $REPOSITORY || aws ecr create-repository --repository-name $REPOSITORY
 
     - name: Build, tag, and push docker image to Amazon ECR
       env:
